@@ -2,9 +2,10 @@ from polygon import Polygon
 from vector2 import Vec2d
 
 class Square(Polygon):
-	def __init__(self, context, x, y, w, h, rot, density):
+	def __init__(self, context, x, y, w, h, rot=0, color=(0, 0, 0), density=1):
 		Polygon.__init__(self, context, self.get_vertex_points(x, y, w, h), density)
 		self.set_rot(rot)
+		self.set_color(color)
 
 	def get_vertex_points(self, x, y, w, h):
 		vertex_points = [
@@ -19,6 +20,7 @@ class Square(Polygon):
 class Player(Square):
 	def __init__(self, context, x, y, w, h, rot, density):
 		Square.__init__(self, context, x, y, w, h, rot, density)
+		self.set_color((0, 150, 100))
 		self.keys = {}
 
 	def update(self, dt):

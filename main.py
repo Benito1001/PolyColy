@@ -44,10 +44,6 @@ class Context():
 context = Context()
 
 
-player = Player(context, 1, 1, 1, 1, 0, 1)
-
-entities.append(player)
-
 def cooly_pooly(mid, size, quality):
 	vertices = []
 	# for theta in np.linspace(0, 2*np.pi, quality+1):
@@ -59,7 +55,26 @@ def cooly_pooly(mid, size, quality):
 		prev_theta = theta
 	return vertices[:-1]
 
-# entities.append(Square(context, 3, 2, 3, 1, 3.14/4, 1))
+player = Player(context, 1, 1, 1, 1, 0, 1)
+
+entities.append(player)
+# entities.append(Polygon(context, cooly_pooly(Vec2d(2.5, 2.5), 1, random.randint(3, 9)), 1))
+#
+# for entity in entities:
+# 	entity.draw()
+#
+# for ent1, ent2 in itertools.combinations(entities, 2):
+# 	if ent1.hitbox.collides(ent2.hitbox):
+# 		colliding, *collision_data = is_colliding(ent1, ent2)
+# 		if colliding:
+# 			left_poly, right_poly, collision_depth, collision_vector, left_collision_vector, right_collision_vector = collision_data
+#
+# 			collision_point = left_poly.mid - left_collision_vector
+#
+# 			pr = 0.025
+# 			point = Square(context, *(collision_point-(pr/2, pr/2)), pr, pr, color=(0, 255, 0))
+# 			point.draw()
+
 for x in range(3, 16, 4):
 	for y in range(2, 9, 3):
 			entities.append(Polygon(context, cooly_pooly(Vec2d(x, y), 1, random.randint(3, 9)), 1))
@@ -118,7 +133,6 @@ while mainloop:
 			key_name = pygame.key.name(event.key)
 			player.keys[key_name] = False
 
-	# player.set_rot(player.rot + 0.1)
 	# Update and Draw
 	quality = 10
 	for i in range(quality):

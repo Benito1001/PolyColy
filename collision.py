@@ -22,23 +22,39 @@ def get_collision_depth(poly1, poly2, n):
 	return (between - min_l2n + max_l2n)*-1, left_poly, right_poly
 
 def get_collision_vectors(left_poly, right_poly, collision_vector):
-	# Obs: wrong!
-	get_vertex_length = lambda vertex: vertex.dot(collision_vector)
+	# still wrong, somewhat close
 
-	max_l2n = min([vertex.dot(collision_vector) for vertex in left_poly.vertices[:-1]])
-	min_l2n = max([vertex.dot(collision_vector) for vertex in right_poly.vertices[:-1]])
+	# get "x"-component of collision point
+	x_vector = collision_vector
+	depth_x, left_poly_x, right_poly_x = get_collision_depth(left_poly, right_poly, x_vector)
+	rmin_x = max([vertex.dot(x_vector) for vertex in right_poly.vertices[:-1]])
+	px = right_poly_x.mid.dot(x_vector) + rmin_x - depth_x/2
 
-	keep_left_vertex = lambda vertex: get_vertex_length(vertex) == max_l2n
-	keep_right_vertex = lambda vertex: get_vertex_length(vertex) == min_l2n
+	# get "y"-component of collision point
+	y_vector = Vec2d(-x_vector.y, x_vector.x)
 
-	left_collision_vertices = list(filter(keep_left_vertex, left_poly.vertices[:-1]))
-	right_collision_vertices = list(filter(keep_right_vertex, right_poly.vertices[:-1]))
+	lmax_x = min([vertex.dot(x_vector) for vertex in left_poly.vertices[:-1]])
 
-	left_collision_vertex = sum(left_collision_vertices)/len(left_collision_vertices)
-	right_collision_vertex = sum(right_collision_vertices)/len(right_collision_vertices)
+	left_filter = lambda vertex_point: abs((vertex_point - left_poly.mid).dot(x_vector) - lmax_x) < 1e-8
+	right_filter = lambda vertex_point: abs((vertex_point - right_poly.mid).dot(x_vector) - rmin_x) < 1e-8
 
-	left_collision_vector = left_poly.mid - (right_poly.mid + right_collision_vertex)
-	right_collision_vector = right_poly.mid - (left_poly.mid + left_collision_vertex)
+	left_points = list(filter(left_filter, left_poly.vertex_points[:-1]))
+	right_points = list(filter(right_filter, right_poly.vertex_points[:-1]))
+
+	if len(left_points) == 1:
+		py = left_points[0].dot(y_vector)
+	elif len(right_points) == 1:
+		py = right_points[0].dot(y_vector)
+	else:
+		if sum(left_points).dot(y_vector) > sum(right_points).dot(y_vector):
+			py = ((left_points[0] + right_points[0])/2).dot(y_vector)
+		else:
+			py = ((right_points[1] + left_points[1])/2).dot(y_vector)
+
+	collision_point = px*x_vector + py*y_vector
+
+	left_collision_vector = left_poly.mid - collision_point
+	right_collision_vector = right_poly.mid - collision_point
 
 	return left_collision_vector, right_collision_vector
 
@@ -86,8 +102,8 @@ if __name__ == '__main__':
 		screen_size_m = Size(screen_size_px.w/px2m, screen_size_px.h/px2m)
 	context = Context()
 
-	poly1 = Square(context, 1, 1, 1, 1, 0, 1)
-	poly2 = Square(context, 1.95, 0.7, 1, 1, 0, 1)
+	poly1 = Square(context, 0, 0, 1, 1, 0, 1)
+	poly2 = Square(context, 0.75, 0.75, 1, 1, 0, 1)
 
 	# def cooly_pooly(mid, size, quality):
 	# 	vertices = []
@@ -116,10 +132,10 @@ if __name__ == '__main__':
 	# print(f"collision time: {collision_time/loops:.3g} s")
 
 	colliding, *collision_data = is_colliding(poly1, poly2)
-	left_poly, right_poly, collision_depth, collision_vector, left_collision_vector, right_collision_vector = collision_data
-	print(left_poly.mid, right_poly.mid)
-	print(left_collision_vector, right_collision_vector)
-
-	spring_force = collision_vector*2000*collision_depth**(2/3)
-	print(spring_force)
-	print(left_collision_vector.cross(spring_force), right_collision_vector.cross(spring_force))
+	# left_poly, right_poly, collision_depth, collision_vector, left_collision_vector, right_collision_vector = collision_data
+	# print(left_poly.mid, right_poly.mid)
+	# print(left_collision_vector, right_collision_vector)
+	#
+	# spring_force = collision_vector*2000*collision_depth**(2/3)
+	# print(spring_force)
+	# print(left_collision_vector.cross(spring_force), right_collision_vector.cross(spring_force))
