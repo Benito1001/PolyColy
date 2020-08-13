@@ -3,9 +3,8 @@ from vector2 import Vec2d
 
 class Square(Polygon):
 	def __init__(self, context, x, y, w, h, rot=0, color=(0, 0, 0), density=1):
-		Polygon.__init__(self, context, self.get_vertex_points(x, y, w, h), density)
+		Polygon.__init__(self, context, self.get_vertex_points(x, y, w, h), density, color)
 		self.set_rot(rot)
-		self.set_color(color)
 
 	def get_vertex_points(self, x, y, w, h):
 		vertex_points = [

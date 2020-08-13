@@ -3,10 +3,10 @@ from entity import Entity, Hitbox
 from vector2 import Vec2d
 
 class Polygon(Entity):
-	def __init__(self, context, vertex_points, density):
+	def __init__(self, context, vertex_points, density=1, color=(0, 0, 0)):
 		Entity.__init__(self, context)
 
-		self.color = (0, 0, 0)
+		self.color = color
 		self.rot = 0
 		self.density = density
 
@@ -74,8 +74,6 @@ class Polygon(Entity):
 
 			area = abs((Pi - P0).cross(Pii - P0))
 			total_area += area
-			if hasattr(area, "__getitem__"):
-				print(area.__getitem__)
 			midpoints += ((P0 + Pi + Pii)/3)*area
 
 		return total_area/2, midpoints/total_area
