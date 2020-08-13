@@ -8,7 +8,7 @@ from polygon import Polygon
 def get_collision_depth(poly1, poly2, n):
 	between_vec = poly1.mid - poly2.mid
 	between = between_vec.dot(n)
-	if between_vec.dot(n) < 0:
+	if between < 0:
 		between *= -1
 		left_poly = poly2
 		right_poly = poly1
@@ -21,42 +21,93 @@ def get_collision_depth(poly1, poly2, n):
 
 	return (between - min_l2n + max_l2n)*-1, left_poly, right_poly
 
-def get_collision_vectors(left_poly, right_poly, collision_vector):
-	# still wrong, somewhat close
-
-	# get "x"-component of collision point
-	x_vector = collision_vector
-	depth_x, left_poly_x, right_poly_x = get_collision_depth(left_poly, right_poly, x_vector)
-	rmin_x = max([vertex.dot(x_vector) for vertex in right_poly.vertices[:-1]])
-	px = right_poly_x.mid.dot(x_vector) + rmin_x - depth_x/2
-
-	# get "y"-component of collision point
-	y_vector = Vec2d(-x_vector.y, x_vector.x)
-
-	lmax_x = min([vertex.dot(x_vector) for vertex in left_poly.vertices[:-1]])
-
-	left_filter = lambda vertex_point: abs((vertex_point - left_poly.mid).dot(x_vector) - lmax_x) < 1e-8
-	right_filter = lambda vertex_point: abs((vertex_point - right_poly.mid).dot(x_vector) - rmin_x) < 1e-8
-
-	left_points = list(filter(left_filter, left_poly.vertex_points[:-1]))
-	right_points = list(filter(right_filter, right_poly.vertex_points[:-1]))
-
-	if len(left_points) == 1:
-		py = left_points[0].dot(y_vector)
-	elif len(right_points) == 1:
-		py = right_points[0].dot(y_vector)
+def get_poly_circle_collision_depth(poly, point, radius, n):
+	between_vec = poly.mid - point
+	between = between_vec.dot(n)
+	if between < 0:
+		between *= -1
+		# poly is left, point is right
+		max_l2n = min([vertex.dot(n) for vertex in poly.vertices[:-1]])
+		min_l2n = radius
 	else:
-		if sum(left_points).dot(y_vector) > sum(right_points).dot(y_vector):
-			py = ((left_points[0] + right_points[0])/2).dot(y_vector)
-		else:
-			py = ((right_points[1] + left_points[1])/2).dot(y_vector)
+		# point is left, poly is right
+		max_l2n = -radius
+		min_l2n = max([vertex.dot(n) for vertex in poly.vertices[:-1]])
 
-	collision_point = px*x_vector + py*y_vector
+	return (between - min_l2n + max_l2n)*-1
+
+
+def get_collision_vectors(left_poly, right_poly, collision_vector):
+	# get all collision polygon vertex points
+	colypoly_vertex_points = []
+
+	for point in left_poly.vertex_points[:-1]:
+		if point_in_polygon(point, right_poly):
+			colypoly_vertex_points.append(point.copy())
+
+	for point in right_poly.vertex_points[:-1]:
+		if point_in_polygon(point, left_poly):
+			colypoly_vertex_points.append(point.copy())
+
+	for edge1 in left_poly.edges:
+		for edge2 in right_poly.edges:
+			P1 = edge1[0] + left_poly.mid
+			r1 = edge1[1] - edge1[0]
+			P2 = edge2[0] + right_poly.mid
+			r2 = edge2[1] - edge2[0]
+
+			denominator = r1.cross(r2)
+			if denominator == 0:
+				continue
+
+			t1 = (r2.cross(P1) - r2.cross(P2))/denominator
+			t2 = (r1.cross(P1) - r1.cross(P2))/denominator
+
+			if 0 <= t1 <= 1 and 0 <= t2 <= 1:
+				P = P1 + r1*t1
+				colypoly_vertex_points.append(P)
+
+	# sort collision vertex points so the points are in a clockwise ordering
+	pseudo_mid = sum(colypoly_vertex_points)/len(colypoly_vertex_points)
+	colypoly_vertex_points.sort(key=lambda point: (point - pseudo_mid).angle, reverse=True)
+
+	# the center of the collision polygon is the point where the collision occurred
+	collision_point = get_polygon_mid(colypoly_vertex_points)
 
 	left_collision_vector = left_poly.mid - collision_point
 	right_collision_vector = right_poly.mid - collision_point
 
 	return left_collision_vector, right_collision_vector
+
+def point_in_polygon(point, polygon):
+	for normal in polygon.normals:
+		if get_poly_circle_collision_depth(polygon, point, 0, normal) < 0:
+			return False
+	return True
+
+def get_polygon_mid(vertex_points):
+	n = len(vertex_points) - 1
+
+	if n == 1:
+		return (vertex_points[0] + vertex_points[1])/2
+	elif n == 0:
+		return vertex_points[0]
+
+	P0 = vertex_points[0]
+
+	total_area = 0
+	midpoints = Vec2d(0, 0)
+	for i in range(1, n):
+		Pi, Pii = vertex_points[i], vertex_points[i+1]
+
+		area = abs((Pi - P0).cross(Pii - P0))
+		total_area += area
+		midpoints += ((P0 + Pi + Pii)/3)*area
+
+	if total_area == 0:
+		print(midpoints, vertex_points, n)
+
+	return midpoints/total_area
 
 def is_colliding(poly1, poly2):
 	# get list og uniqe normals
