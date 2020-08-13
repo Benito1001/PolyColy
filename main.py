@@ -44,10 +44,14 @@ class Context():
 context = Context()
 
 
+def orderly_pooly(mid, size, quality):
+	vertices = []
+	for theta in np.linspace(0, 2*np.pi, quality+1):
+		vertices.append(mid + Vec2d(float(np.cos(theta)), float(np.sin(theta)))*size)
+	return vertices[:-1]
+
 def cooly_pooly(mid, size, quality):
 	vertices = []
-	# for theta in np.linspace(0, 2*np.pi, quality+1):
-	# 	vertices.append(mid + Vec2d(float(np.cos(theta)), float(np.sin(theta)))*size)
 	prev_theta = 0
 	for n in range(quality + 1):
 		vertices.append(mid + Vec2d(float(np.cos(prev_theta)), float(np.sin(prev_theta)))*size)
@@ -55,49 +59,17 @@ def cooly_pooly(mid, size, quality):
 		prev_theta = theta
 	return vertices[:-1]
 
-player = Player(context, 1, 1, 1, 1, 0, 1)
 
+player = Player(context, 1, 1, 1, 1, 0, 1)
 entities.append(player)
-# entities.append(Polygon(context, cooly_pooly(Vec2d(2.5, 2.5), 1, random.randint(3, 9)), 1))
-#
-# for entity in entities:
-# 	entity.draw()
-#
-# for ent1, ent2 in itertools.combinations(entities, 2):
-# 	if ent1.hitbox.collides(ent2.hitbox):
-# 		colliding, *collision_data = is_colliding(ent1, ent2)
-# 		if colliding:
-# 			left_poly, right_poly, collision_depth, collision_vector, left_collision_vector, right_collision_vector = collision_data
-#
-# 			collision_point = left_poly.mid - left_collision_vector
-#
-# 			pr = 0.025
-# 			point = Square(context, *(collision_point-(pr/2, pr/2)), pr, pr, color=(0, 255, 0))
-# 			point.draw()
 
 for x in range(3, 16, 4):
 	for y in range(2, 9, 3):
 			entities.append(Polygon(context, cooly_pooly(Vec2d(x, y), 1, random.randint(3, 9)), 1))
 
-# entities.append(Polygon(context, [
-# 	Vec2d(4, 4), Vec2d(5, 5), Vec2d(4, 6), Vec2d(3.3, 5.9), Vec2d(3, 5)
-# ]))
-# poly1_pos = Vec2d(0.5, 4.25)
-# poly1 = Polygon(context, [
-# 	poly1_pos, poly1_pos+(1, 0), poly1_pos+(1, 1), poly1_pos+(0, 1)
-# ])
-# entities.append(poly1)
-# #
-# poly1_pos = Vec2d(2, 2)
-# poly2 = Polygon(context, [
-# 	poly1_pos, poly1_pos+(1, 1), poly1_pos+(0, 2), poly1_pos+(-0.7, 1.9), poly1_pos+(-1, 1)
-# ])
-# entities.append(poly2)
 
 end_time, start_time, dt = 1, 1, 1
 time_saturations = []
-
-# saturation_data = open("satdat.txt", "w")
 
 while mainloop:
 	# Print framerate and playtime in titlebar
@@ -109,7 +81,6 @@ while mainloop:
 	time_saturations.append(time_saturation)
 	if len(time_saturations) > 60:
 		time_saturations.pop(0)
-	# saturation_data.write(f"{playtime} {time_saturation}\n")
 
 	text = f"fps: {true_fps:.2f}   Frame saturation: {sum(time_saturations)/len(time_saturations):.0f} %"
 	pygame.display.set_caption(text)
@@ -163,4 +134,3 @@ while mainloop:
 
 # Finish Pygame.
 pygame.quit()
-# saturation_data.close()
